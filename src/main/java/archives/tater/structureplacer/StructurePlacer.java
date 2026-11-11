@@ -15,6 +15,8 @@ import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Comparator;
+
 import static java.lang.Math.max;
 import static java.util.stream.Collectors.groupingBy;
 import static net.minecraft.commands.Commands.literal;
@@ -29,6 +31,7 @@ public class StructurePlacer implements ModInitializer {
 
 	public static final int MARGIN = 4;
 	public static final StructurePlaceSettings SETTINGS = new StructurePlaceSettings();
+	public static final Comparator<Identifier> IDENTIFIER_COMPARATOR = Comparator.comparing(Identifier::getNamespace).thenComparing(Identifier::getPath);
 
 	@Override
 	public void onInitialize() {
@@ -49,13 +52,13 @@ public class StructurePlacer implements ModInitializer {
 			var byDir = templateManager.listTemplates()
 					.collect(groupingBy(id -> id.withPath(path -> {
 						var endIndex = path.lastIndexOf('/');
-						return endIndex >= 0 ? path.substring(0, endIndex) : path;
+						return endIndex >= 0 ? path.substring(0, endIndex) : "";
                     })));
 
 			var z = 0;
 			var placed = 0;
 
-			var sortedDirs = byDir.keySet().stream().sorted().toList();
+			var sortedDirs = byDir.keySet().stream().sorted(IDENTIFIER_COMPARATOR).toList();
 			for (var dir : sortedDirs) {
 				var templates = byDir.get(dir);
 
