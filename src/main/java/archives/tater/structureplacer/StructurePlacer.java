@@ -47,47 +47,43 @@ public class StructurePlacer implements ModInitializer {
 	}
 
 	public static int placeAllTemplates(ServerLevel level, BlockPos origin) {
-		try {
-			var templateManager = level.getStructureTemplateManager();
-			var byDir = templateManager.listTemplates()
-					.collect(groupingBy(id -> id.withPath(path -> {
-						var endIndex = path.lastIndexOf('/');
-						return endIndex >= 0 ? path.substring(0, endIndex) : "";
-                    })));
+		var templateManager = level.getStructureTemplateManager();
+		var byDir = templateManager.listTemplates()
+				.collect(groupingBy(id -> id.withPath(path -> {
+					var endIndex = path.lastIndexOf('/');
+					return endIndex >= 0 ? path.substring(0, endIndex) : "";
+				})));
 
-			var z = 0;
-			var placed = 0;
+		var z = 0;
+		var placed = 0;
 
-			var sortedDirs = byDir.keySet().stream().sorted(IDENTIFIER_COMPARATOR).toList();
-			for (var dir : sortedDirs) {
-				var templates = byDir.get(dir);
+		var sortedDirs = byDir.keySet().stream().sorted(IDENTIFIER_COMPARATOR).toList();
+		for (var dir : sortedDirs) {
+			var templates = byDir.get(dir);
 
-				var x = 0;
-				var maxZ = 0;
-				for (var templateId : templates) {
-					var template = templateManager.get(templateId).orElse(null);
-					if (template == null) continue;
+			var x = 0;
+			var maxZ = 0;
+			for (var templateId : templates) {
+				var template = templateManager.get(templateId).orElse(null);
+				if (template == null) continue;
 
-					var pos = origin.offset(x, 0, z);
-					var size = template.getSize();
-					if (!template.placeInWorld(level, pos, pos, SETTINGS, level.getRandom(), 0)) continue;
+				var pos = origin.offset(x, 0, z);
+				var size = template.getSize();
+				if (!template.placeInWorld(level, pos, pos, SETTINGS, level.getRandom(), 0)) continue;
 
-					var label = new Display.TextDisplay(EntityTypes.TEXT_DISPLAY, level);
-					label.setPos(Vec3.atCenterOf(pos.offset(size.getX() / 2, size.getY(), size.getZ() / 2)));
-					label.setText(Component.literal(templateId.toString()));
-					label.setBillboardConstraints(Display.BillboardConstraints.CENTER);
-					level.addFreshEntity(label);
+				var label = new Display.TextDisplay(EntityTypes.TEXT_DISPLAY, level);
+				label.setPos(Vec3.atCenterOf(pos.offset(size.getX() / 2, size.getY(), size.getZ() / 2)));
+				label.setText(Component.literal(templateId.toString()));
+				label.setBillboardConstraints(Display.BillboardConstraints.CENTER);
+				level.addFreshEntity(label);
 
-					placed++;
-					maxZ = max(maxZ, size.getZ());
-					x += size.getX() + MARGIN;
-				}
-				z += maxZ + MARGIN;
+				placed++;
+				maxZ = max(maxZ, size.getZ());
+				x += size.getX() + MARGIN;
 			}
-			return placed;
-		} catch (Exception e) {
-			return 0;
+			z += maxZ + MARGIN;
 		}
+		return placed;
 	}
 
 	public static Identifier id(String path) {
